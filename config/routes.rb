@@ -1,13 +1,27 @@
 Rails.application.routes.draw do
-  resources :waitlists
-  resources :users, only: [:index, :create, :destroy]
+  
+  resources :cancellations
+  resources :additional_incomes
+  resources :invoices, except: :update
+  resources :appointments
+  resources :pets
+  resources :users
 
-  post 'login', to: 'sessions#create'
-  delete 'logout', to: 'sessions#destroy'
-  get '/me', to: 'users#show' 
+  get "/me", to: "users#show"
+  patch '/change_rates', to: 'users#change_rates'
+  
+  post "/login", to: "sessions#create"
+  delete "/logout", to: "sessions#destroy"
 
-  get "up" => "rails/health#show", as: :rails_health_check
+  patch "/invoices/paid", to: "invoices#paid"
+  patch "/invoices/pending", to: "invoices#pending"
 
-  get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
-  get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
+  patch '/appointments/:id/canceled', to: 'appointments#canceled'
+  get '/pets_appointments', to: 'appointments#pet_appointments'
+  patch '/pets/:id/active', to: 'pets#update_active_status'
+
+  # Routing logic: fallback requests for React Router.
+  # Leave this here to help deploy your app later!
+
+  get "*path", to: "fallback#index", constraints: ->(req) { !req.xhr? && req.format.html? }
 end

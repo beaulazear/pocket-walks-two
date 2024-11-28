@@ -1,8 +1,17 @@
 class User < ApplicationRecord
-  has_secure_password
+    has_secure_password
 
-  validates :name, presence: true
-  validates :username, presence: true, uniqueness: true
-  validates :email, presence: true, uniqueness: true, format: { with: URI::MailTo::EMAIL_REGEXP }
-  validates :password, presence: true, length: { minimum: 6 }
+    has_many :pets
+    has_many :appointments
+    
+    validates :username, uniqueness: true
+    validates :username, presence: true
+    validates :name, presence: true
+    validates :email_address, presence: true
+
+    validates :thirty, numericality: { only_integer: true }
+    validates :fourty, numericality: { only_integer: true }
+    validates :sixty, numericality: { only_integer: true }
+    validates :solo_rate, numericality: { only_integer: true }
+
 end

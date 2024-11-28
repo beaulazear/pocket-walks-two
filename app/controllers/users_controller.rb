@@ -3,39 +3,55 @@ class UsersController < ApplicationController
 
     skip_before_action :authorized, only: [:create, :index]
 
-    def index
-      users = User.all
-      render json: users
-    end
-  
     def create
-      user = User.create(user_params)
-      if user.valid?
-        render json: user, status: :created
-      else
-        render json: user.errors, status: :unprocessable_entity
-      end
+        user = User.create(user_params)
+        if user.valid?
+            render json: user, status: :created
+            session[:user_id] = user.id
+        else
+            render json: { errors: user.errors.full_messages }, status: :unprocessable_entity
+        end
     end
-  
-    def destroy
-      user = User.find(params[:id])
-      user.destroy
-      head :no_content
+
+    def index
+        users = User.all
+        if users
+            render json: users
+        else
+            render json: {  error: "Not found" }, status: :not_found
+        end
     end
 
     def show
-      Rails.logger.info("Session user_id in #show action: #{session[:user_id]}")
-      user = User.find_by(id: session[:user_id]) # Manually load user based on session[:user_id]
-      if user
-        render json: user
-      else
-        render json: { error: "Not authorized" }, status: :unauthorized
+        user = User.includes(pets: [], appointments: [:invoices, :cancellations]).find(session[:user_id])
+        render json: user, include: {
+          pets: {},
+          appointments: {
+            include: [:invoices, :cancellations]
+          }
+        }
       end
+
+    def change_rates
+
+        user = User.find(session[:user_id])
+
+        user.update(rates_params)
+
+        if user.valid?
+            render json: user
+        else
+            render json: {errors: user.errors.full_messages}, status: :unprocessable_entity
+        end
     end
-  
+
     private
-  
+
     def user_params
-      params.require(:user).permit(:name, :username, :email, :password)
+        params.permit(:username, :password, :password_confirmation, :name, :email_address, :pets, :thirty, :fourty, :sixty, :solo_rate)
     end
-  end
+
+    def rates_params
+        params.permit(:thirty, :fourty, :sixty, :solo_rate)
+    end
+end
